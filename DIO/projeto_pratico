@@ -1,0 +1,3 @@
+Criação de um projeto prático em um banco
+O sistema deve conter operações de depósito, saque, extrato e sair do sistema;
+O saque não deve ultrapassar o valor de R$ 500, ou quantidades superiores a 3 retiradas. 
