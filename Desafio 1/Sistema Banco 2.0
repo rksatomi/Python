@@ -1,0 +1,152 @@
+
+#função de sacar
+def sacar(saldo,valor,extrato,limite,numero_saques,limite_saques):
+    resp_saque=""
+    if valor > saldo: #condiçao de verificação de saldo suficiente
+        print("\nErro de Operação! Você não tem saldo suficiente.\n")
+        print("\nSaldo: R$ {saldo:.2f} \n")
+    elif valor > LIMITE: #condição de verificação do limite máximo de valor de saque
+        print("\nErro de Operação! O valor do saque excede o limite DE R$ 500 ao dia.\n")
+    elif numero_saques >= LIMITE_SAQUES: # condição de verificação de quantidades de saque no dia
+        print("\nErro de Operação! Número máximo de 3 saques ao dia excedido.\n")
+    # condição para saque maior que 0, além de valor suficiente, valor máximo de saque e números de saque por dia, já foram verificados antes de chegar a esta condição
+    elif valor > 0:
+        saldo -= valor
+        extrato += f"Saque R$ {valor:.2f}\n"
+        numero_saques += 1
+        print("\nValor SACADO R$ %.2f" % valor + "\n\n")
+        print("Valor SALDO R$ %.2f" % saldo + "\n\n")
+    else:
+        print("\nErro de Operação! O valor informado é inválido.\n")
+
+    return saldo,extrato,numero_saques
+
+#função de deposito
+def depositar (valor,saldo,extrato):
+    if valor > 0: #condiçao de depósito maior que 0
+        saldo += valor #adiciona valor de depósito ao saldo, desde de que seja aceita a condição anterior
+        extrato += f"Depósito R$ {valor:.2f}\n" # adiciona informação ao extrato "string extrato"
+        print("Valor depositado R$ %.2f" % valor + "\n")
+    else:
+        print("Erro de Operação! O valor informado é inválido.") #resultado da condiçao de depósito inferior a  0
+
+    return saldo,extrato
+
+#função de extrato
+def exibir_extrato(saldo,extrato):
+    print("\nFunção escolhida : EXTRATO \n")
+    print("\n**************** EXTRATO ****************")
+    print(extrato)
+    print("\nSaldo: R$ %.2f" % saldo)
+    print("*******************************************")
+
+#função de criar usuário
+def criar_usuario(usuarios):
+    while True: #Mantem o loop até a cormirmação dos dados para armazenamento
+        print("\nFunção escolhida : Criação de usuários \n")
+        cpf = input("Informe o CPF (somente números): ")    
+        if filtrar_usuario(cpf,usuarios):
+            print("\nCPF já cadastrado \n")
+            if (input("Deseja cadastrar novo usuário (s/n):")=="n"):
+                break
+        else:              
+            nome = input("Informe o nome completo do usuário: ")
+            data_nascimento = input("Informe a data de nascimento (dd - mm - aaaa):  ")
+            endereco = input("Informe o endereço (Logadouro, número - bairro - cidade/sigla estado): ")
+            confirmaDados = input("confirma dados (s/n) ")
+            if confirmaDados == "s": #Solicita confirmação dos dados informados
+                usuarios.append({"nome":nome, "data_nascimento":data_nascimento, "cpf":cpf,"endereco":endereco,})
+                print("Usuário cadastrado com sucesso!!!")
+                break
+
+#função de filtro(busca no dicionario usuários)        
+def filtrar_usuario(cpf,usuarios):
+    usuarios_filtrados = [usuario for usuario in usuarios if usuario["cpf"]==cpf]
+    return usuarios_filtrados[0] if usuarios_filtrados else None
+
+#função de criar conta(criar vínculo)
+def criar_conta(agencia,numeroConta,usuarios):
+    cpf = input("Informe o CPF (somente números): ")    
+    usuario=filtrar_usuario(cpf,usuarios)
+    if usuario:
+        numeroConta+=1
+        print("Agencia: ",agencia + " - Conta: ",numeroConta)
+        print("Criação de conta sucesso!")
+        return {"AGENCIA":agencia,"numeroConta":numeroConta,"usuario":usuario}
+    else:
+        print("Usuário não encontrado!")
+
+#função listar contas existentes
+def listar_contas(contas):
+    print("Contas de Usuários")
+    for conta in contas:  
+        
+        print("***************************************")
+        print("Agência: ", conta['AGENCIA'])
+        print("Conta Corrente: ",conta['numeroConta'])
+        print("Titular: ",conta['usuario']['nome'])
+        print("***************************************")
+
+
+
+
+
+
+
+menu = """
+*************************************
+*   Seja Bem vindo ao Nosso Banco   *
+*                                   *
+*    Informe a opção desejada       *
+*                                   *
+*    [d]  Depositar                 *
+*    [s]  Sacar                     *
+*    [e]  Extrato                   *
+*    [nc] Nova conta                *
+*    [nu] Novo usuário              *
+*    [lc] Listar contas             *
+*    [q]  Sair                      *
+*                                   *
+*                                   *
+*************************************
+"""
+saldo = 0 #inicialização de variável saldo
+LIMITE = 500 #inicialização da variável global (limite para realização do saque)  
+extrato = "" #inicialização da string 
+numero_saques = 0 #inicialização de variável número de saque
+LIMITE_SAQUES = 3 #inicialização da variável global (limite de saques)  
+usuarios = [] #dicionario dos usuários
+contas=[] #dicionario das contas correntes
+AGENCIA = "0001" ##inicialização da variável global (Agência definida)  
+
+while True:
+    
+    opcao = input(menu)  #Exibe menu, antes da entrada de dados
+
+    if opcao == "d": #funão depositar
+        print("\nFunção escolhida : DEPÓSITO\n")
+        valor = float(input("Informe o valor do depósito: "))
+        saldo,extrato = depositar(valor,saldo,extrato)
+        
+    elif opcao == "s": # função sacar o dinheiro
+        print("\nFunção escolhida : SAQUE\n")
+        valor = float(input("Informe o valor do saque: "))
+        saldo,extrato,numero_saques=sacar(saldo=saldo, valor=valor,extrato=extrato,limite=LIMITE,numero_saques=numero_saques,limite_saques=LIMITE_SAQUES)
+        
+    elif opcao == "e": #função de exibir extrato
+        exibir_extrato(saldo,extrato=extrato)
+
+    elif opcao == "q":  #função de sair do programa
+        print("\nFunção escolhida : SAIR\n")
+        break
+    elif opcao == "nc": #função criar conta
+        conta=criar_conta(AGENCIA,len(contas),usuarios)
+        if conta:
+            contas.append(conta)
+            
+    elif opcao == "nu": #função criar usuário
+        criar_usuario(usuarios)
+    elif opcao == "lc": #função listar contas
+        listar_contas(contas)  
+    else: 
+        print("\nErro de Operação, por favor selecione operação desejada.\n")

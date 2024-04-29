@@ -1,0 +1,72 @@
+menu = """
+*************************************
+*   Seja Bem vindo ao Nosso Banco   *
+*                                   *
+*    Informe a opção desejada       *
+*                                   *
+*    [d] Depositar                  *
+*    [s] Sacar                      *
+*    [e] Extrato                    *
+*    [q] Sair                       *
+*                                   *
+*                                   *
+*************************************
+"""
+saldo = 0 #inicialização de variável saldo
+LIMITE = 500 #inicialização da variável global (limite para realização do saque)  
+extrato = "" #inicialização da string 
+numero_saques = 0 #inicialização de variável número de saque
+LIMITE_SAQUES = 3 #inicialização da variável global (limite de saques)  
+
+while True:
+    
+    opcao = input(menu)  #Exibe menu, antes da entrada de dados
+
+    if opcao == "d": #funão depositar
+        print("\nFunção escolhida : DEPÓSITO\n")
+        valor = float(input("Informe o valor do depósito: "))
+
+        if valor > 0: #condiçao de depósito maior que 0
+            saldo += valor #adiciona valor de depósito ao saldo, desde de que seja aceita a condição anterior
+            extrato += f"Depósito R$ {valor:.2f}\n" # adiciona informação ao extrato "string extrato"
+            print("Valor depositado R$ %.2f" % valor + "\n")
+
+        else:
+            print("Erro de Operação! O valor informado é inválido.") #resultado da condiçao de depósito inferior a  0
+
+    elif opcao == "s": # função sacar o dinheiro
+        print("\nFunção escolhida : SAQUE\n")
+        valor = float(input("Informe o valor do saque: "))
+
+        if valor > saldo: #condiçao de verificação de saldo suficiente
+            print("\nErro de Operação! Você não tem saldo suficiente.\n")
+            print("\nSaldo: R$ %.2f" % saldo + "\n")
+
+        elif valor > LIMITE: #condição de verificação do limite máximo de valor de saque
+            print("\nErro de Operação! O valor do saque excede o limite DE R$ 500 ao dia.\n")
+
+        elif numero_saques >= LIMITE_SAQUES: # condição de verificação de quantidades de saque no dia
+            print("\nErro de Operação! Número máximo de 3 saques ao dia excedido.\n")
+        # condição para saque maior que 0, além de valor suficiente, valor máximo de saque e números de saque por dia, já foram verificados antes de chegar a esta condição
+        elif valor > 0:
+            saldo -= valor
+            extrato += f"Saque R$ {valor:.2f}\n"
+            numero_saques += 1
+            print("\nValor SACADO R$ %.2f" % valor + "\n\n")
+            print("Valor SALDO R$ %.2f" % saldo + "\n\n")
+        else:
+            print("\nErro de Operação! O valor informado é inválido.\n")
+
+    elif opcao == "e": #função de exibir extrato
+        print("\nFunção escolhida : EXTRATO \n")
+        print("\n**************** EXTRATO ****************")
+        print(extrato)
+        print("\nSaldo: R$ %.2f" % saldo)
+        print("*******************************************")
+
+    elif opcao == "q":  #função de sair do programa
+        print("\nFunção escolhida : SAIR\n")
+        break
+
+    else:
+        print("\nErro de Operação, por favor selecione operação desejada.\n")
