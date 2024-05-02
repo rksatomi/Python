@@ -5,13 +5,34 @@ from datetime import datetime
 import textwrap
 import os 
 
-
+class ContasInterador:
+    def __init__(self,contas):
+        self.contas=contas
+        self._index=0
+        
+    def __inter__(self):
+        return self
+    
+    def __next__(self):
+        try:
+            conta=self.contas[self._index]
+            return f"""\
+                Agência:\t{conta.agencia}
+                Número:\t{conta.nro_conta}
+                Titular:\t{conta.cliente.nome}
+                Saldo:\tR${conta.saldo:.2f}
+                """
+        except IndexError:
+            raise StopIteration
+        finally
+            self._index+=1    
+        
 
 #classe Conta
 class Conta:
     #inicializador da classe
     def __init__(self,nro_conta,cliente,data):
-        #declaração de atributos privados
+        #declaração de atributos    
         self._saldo=0
         self._nro_conta=nro_conta
         self._agencia="0001"
@@ -98,11 +119,11 @@ class ContaCorrente(Conta):
         return False    
     #método str para exibir os dados do cadastro de conta bancaria 
     def __str__(self):
-        return f""""\
+        return f"""
             Data:\t{self.data}
             Agência:\t{self.agencia}
             C/C:\t{self.nro_conta}
-            #Titular:\t{self.cliente.nome}
+            Titular:\t{self.cliente.nome}
         """           
               
 #classe historico
@@ -123,6 +144,11 @@ class Historico:
             }
         )
         
+    def gerar_relatorio(self, tipo_transacao):
+        for transacao in self._transacoes:
+            if tipo_transacao is None or transacao['tipo'].lower()==tipo_transacao.lower():
+                yield transacao
+         
     #método para filtrar transações realizadas no dia
     def transacoes_dia(self):
         transacoes_do_dia=[]            
@@ -142,7 +168,6 @@ class Cliente:
         self.contas=[]
     #método executar transação - classe cliente 
     def exec_transacao(self, conta, transacao):
-        print(len(conta.historico.transacoes_dia()))
         if len(conta.historico.transacoes_dia()) >= 9:
             print("Limite de transações do dia excedida")
             return
@@ -150,8 +175,7 @@ class Cliente:
     #método adicionar conta - classe cliente    
     def add_conta(self,conta):
         self.contas.append(conta)
-         
-        
+                
           
 # classe Pessoa Fisica        
 class PessoaFisica(Cliente):
@@ -206,6 +230,16 @@ class Deposito(Transacao):
         if sucesso_transacao:
             conta.historico.adicionar_transacoes(self)
                           
+# função de decorador (irá indicar as funções executadas como um log de eventos)                          
+def log_trasacao(func):
+    def envelope(*args, **kwargs):  #indicação de argumentos variaveis sem necessidade de reajustar de acordo com o problema
+        resultado=func(*args, **kwargs) #definição de retorno, neste probema só necessitamos do print
+        print(f"{datetime.now()}: {func.__name__.upper()}")
+        return resultado
+    return envelope       
+
+                            
+                          
 #Definição da tela de MENU Exibida
 def menu():
     menu = """
@@ -228,6 +262,25 @@ def menu():
     #Coleta da opção desejada, com elimitação de espaços 
     return input(textwrap.dedent(menu))
 
+#Definição da tela de MENU EXtrato
+def menu_extrato():
+    menu_extrato = """
+    *************************************
+    *   Seja Bem vindo ao Nosso Banco   *
+    *                                   *
+    *    Informe a opção Extrato        *
+    *                                   *
+    *    [d]  Depositos                 *
+    *    [s]  Sacar                     *
+    *    [e]  Todos                     *
+    *                                   *
+    *                                   *
+    *************************************
+    =>"""
+    #Coleta da opção desejada, com elimitação de espaços 
+    return input(textwrap.dedent(menu_extrato))
+
+
 #função para filtrar clientes cadastrados           
 def filtrar_cliente(clientes):
     cpf = input("\nInforme o CPF do cliente:")    
@@ -243,6 +296,7 @@ def recuperar_conta_cliente(cliente):
 
 #função para depósito
 #inserir função de formato de CPF como no desafio do telefone
+@log_trasacao # indicação de decorador (log de eventos)
 def depositar(clientes):
     os.system("cls")
     print("Função Depósito")
@@ -260,6 +314,7 @@ def depositar(clientes):
     cliente.exec_transacao(conta, transacao)
    
 #função sacar
+@log_trasacao # indicação de decorador (log de eventos)
 def sacar(clientes):
     os.system("cls")
     print("Função Saque")
@@ -274,8 +329,10 @@ def sacar(clientes):
     if not conta:
         return
     cliente.exec_transacao(conta, transacao)
+
     
 #função exibir extrato    
+@log_trasacao # indicação de decorador (log de eventos)
 def exibir_extrato(clientes):
     #cpf = input("Informe o CPF do cliente:")
     cliente=filtrar_cliente(clientes)
@@ -286,15 +343,28 @@ def exibir_extrato(clientes):
     if not conta:
         return
     os.system("cls")
+      
+    #definição do menu de extrato
+    opcao=menu_extrato()
+    if opcao =="d":
+        tipo_extrato="deposito"
+    elif opcao=="s":
+        tipo_extrato="saque"
+    else:
+        tipo_extrato=None
+        
+    print(tipo_extrato)
+    
     print("\nFunção escolhida : EXTRATO \n")
     print("\n**************** EXTRATO ****************")
-    transacoes=conta.historico.transacoes
     extrato=""
-    if not transacoes:
+    tem_transacao = False
+    for transacao in conta.historico.gerar_relatorio(tipo_extrato):
+        tem_transacao   = True
+        extrato += f"\n{transacao['tipo']}:\n\tR$ {transacao['valor']:.2f}"   
+    if not tem_transacao:
         extrato="Não foram realizadas movimentações"
-    else:
-        for transacao in transacoes:
-            print(transacao['data']+"\t"+transacao['tipo']+" R$:\t%.2f"%transacao['valor'])
+
     print(extrato)        
     print("\nSaldo:\tR$%.2f"%conta.saldo)
     print("*******************************************")  
@@ -302,20 +372,21 @@ def exibir_extrato(clientes):
     
 
 #função de criação de conta bancária (obs Necessário cadastro do cliente antes desse processo)    
+@log_trasacao
 def criar_conta(nro_conta, clientes, contas):
     os.system("cls")
     #verificação de cliente, caso já esteja cadastrado
     print("Cadastro de Conta Bancaria")
     cliente=filtrar_cliente(clientes)
     if not cliente:
-        print("\n\tCliente encontrado, não é possível criar uma conta bancário sem cadastrar o cliente primeiro!")
+        print("\nCliente encontrado, não é possível criar uma conta bancário sem cadastrar o cliente primeiro!")
         return
     data=datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     conta = ContaCorrente.novaConta(cliente=cliente,nro_conta=nro_conta,data=data)
     contas.append(conta)
     cliente.contas.append(conta)
     print(conta)
-    print("\n\tConta Bancária criada com sucesso!!!")
+    print("\nConta Bancária criada com sucesso!!!")
 
 #função de listar contas    
 def listar_contas(contas):
@@ -326,6 +397,7 @@ def listar_contas(contas):
         print(textwrap.dedent(str(conta)))
         
 #função de criação de clientes
+@log_trasacao
 def criar_clientes(clientes):
     #verificação de cliente, caso já esteja cadastrado
     cliente=filtrar_cliente(clientes)
@@ -341,14 +413,13 @@ def criar_clientes(clientes):
     endereco=input("\nInforme o endereço (logadouro, nro - bairro - cidade/sigla estado):  ")
     cliente = PessoaFisica(nome=nome, dataNascimento=data_nascimento, cpf=cpf,endereco=endereco)
     clientes.append(cliente)
-    print("\n\tCliente criado com sucesso !!!!!")
+    print("\nCliente criado com sucesso !!!!!")
 
 #definição do menu na tela
 def main():
     clientes=[]
     contas=[]
-    print("\nErro de Operação, por favor selecione operação desejada.\n")   
-
+ 
     while True: #Exibição contínua, após execução da opção escolhida. 
         opcao=menu()
         if opcao =="d":
