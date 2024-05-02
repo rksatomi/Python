@@ -5,6 +5,8 @@ from datetime import datetime
 import textwrap
 import os 
 
+
+#implementação de interador
 class ContasInterador:
     def __init__(self,contas):
         self.contas=contas
@@ -24,7 +26,7 @@ class ContasInterador:
                 """
         except IndexError:
             raise StopIteration
-        finally
+        finally:
             self._index+=1    
         
 
@@ -362,8 +364,12 @@ def exibir_extrato(clientes):
     for transacao in conta.historico.gerar_relatorio(tipo_extrato):
         tem_transacao   = True
         extrato += f"\n{transacao['tipo']}:\n\tR$ {transacao['valor']:.2f}"   
-    if not tem_transacao:
-        extrato="Não foram realizadas movimentações"
+    if not tem_transacao and  tipo_extrato == "deposito":
+        extrato="Não foram realizadas movimentações de Depósito"
+    elif not tem_transacao and  tipo_extrato == "Saque":
+        extrato="Não foram realizadas movimentações de Saque"
+    else:
+        extrato="Não foram realizadas movimentações de Saques e Depósitos"
 
     print(extrato)        
     print("\nSaldo:\tR$%.2f"%conta.saldo)
@@ -392,7 +398,7 @@ def criar_conta(nro_conta, clientes, contas):
 def listar_contas(contas):
     os.system("cls")
     print("Função de Lista de Contas Bancaria")
-    for conta in contas:
+    for conta in ContasInterador(contas):
         print("=" * 100)
         print(textwrap.dedent(str(conta)))
         
